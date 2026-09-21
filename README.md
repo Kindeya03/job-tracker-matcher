@@ -45,7 +45,7 @@ job-tracker-matcher/
 ## Run locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/job-tracker-matcher.git
+git clone https://github.com/Kindeya03/job-tracker-matcher.git
 cd job-tracker-matcher
 python3 -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
