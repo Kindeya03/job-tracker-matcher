@@ -3,7 +3,7 @@ from datetime import date
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 
 from .db import get_db
-from .matcher import score_match
+from .matcher import extract_document, extract_job_url, score_match
 
 bp = Blueprint("main", __name__)
 STATUSES = ("Applied", "Interviewing", "Offer", "Rejected")
@@ -145,10 +145,20 @@ def matcher():
         return render_template("matcher.html")
     payload = request.get_json(silent=True) or request.form
     job_description = str(payload.get("job_description", "")).strip()
+    job_url = str(payload.get("job_url", "")).strip()
     resume = str(payload.get("resume", "")).strip()
+    cover_letter = str(payload.get("cover_letter", "")).strip()
+    try:
+        resume = extract_document(request.files.get("resume_file")) or resume
+        cover_letter = extract_document(request.files.get("cover_letter_file")) or cover_letter
+        job_description = extract_job_url(job_url) or job_description
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
     if not job_description or not resume:
-        return jsonify({"error": "Add both a job description and resume text."}), 400
-    return jsonify(score_match(job_description, resume))
+        return jsonify({"error": "Add a job description or public job link, plus your resume."}), 400
+    result = score_match(job_description, resume, cover_letter)
+    result["job_source"] = "url" if job_url else "pasted text"
+    return jsonify(result)
 
 
 @bp.get("/health")
