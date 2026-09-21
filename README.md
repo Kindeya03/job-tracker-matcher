@@ -11,8 +11,10 @@ Applying to many roles creates two related problems: application details scatter
 - Add, edit, filter, and delete job applications
 - Track company, role, link, status, date applied, and notes
 - View application counts by status and daily activity on a dashboard
-- Compare pasted resume text with a job description
-- Get a 0–100 match score, matched skills, and missing terms
+- Upload a resume and optional cover letter as PDF, DOCX, or TXT
+- Paste a job description or retrieve one from an optional public job-posting URL
+- Get a 0–100 ATS-style estimate, tier, score breakdown, and missing terms
+- Receive prioritized, actionable feedback before applying
 - Store applications in a persistent SQLite database
 - Load realistic sample data for a quick demo
 - Use a responsive interface with no frontend build step
@@ -77,11 +79,11 @@ The test suite uses an isolated temporary SQLite database and covers CRUD operat
 1. Normalize the job description and resume into meaningful tokens.
 2. Build TF-IDF-weighted vectors from the two documents.
 3. Calculate cosine similarity to measure their vocabulary alignment.
-4. Detect a curated set of common technical skills in both texts.
-5. Blend broad similarity (70%) with exact skill coverage (30%).
-6. Return up to 12 high-signal terms found in the job description but missing from the resume.
+4. Detect a curated set of common technical skills in the application documents.
+5. Evaluate keyword alignment, required-skill coverage, evidence of impact, and readable length.
+6. Return an estimated alignment tier, score breakdown, prioritized feedback, and up to 12 missing terms.
 
-This approach is fast, explainable, deterministic, and dependency-light. It deliberately does not claim to reproduce a company's ATS or judge whether someone is qualified. Missing terms should only be added when they truthfully describe the candidate's experience.
+This approach is fast, explainable, and deterministic. It deliberately does not claim to reproduce a company's ATS, predict a recruiter decision, or judge whether someone is qualified. Missing terms should only be added when they truthfully describe the candidate's experience. Public job URLs are fetched with time, size, content-type, and local-network restrictions; pages that block retrieval can still be pasted manually.
 
 ## Design decisions
 
@@ -89,7 +91,7 @@ This approach is fast, explainable, deterministic, and dependency-light. It deli
 - **SQLite over in-memory storage:** data survives restarts, the schema is easy to inspect, and setup remains one command.
 - **Raw `sqlite3` over an ORM:** the schema and queries stay visible in a small project, which makes data flow easier to discuss in an interview.
 - **Local single-user model:** authentication would add complexity without improving the intended local demo. The app factory leaves room to add it later.
-- **No resume persistence:** application records are stored, but pasted resume and job-description text are processed for one request and discarded.
+- **No document persistence:** uploaded or pasted application documents and retrieved job text are processed for one request and discarded.
 - **No chart dependency:** the activity chart is rendered with semantic HTML/CSS, avoiding another download or build step.
 
 ## API
@@ -118,7 +120,7 @@ Content-Type: application/json
 
 **Problem it solves:** Job seekers often track applications in one place and tailor resumes somewhere else. JobMatch joins those workflows: it keeps every opportunity and its current status visible, then gives the user a fast, explainable signal about how closely their resume matches a target role.
 
-**Key design decisions:** I used Flask with server-rendered templates to keep the architecture simple and demo-friendly, SQLite for real persistence with zero infrastructure, and a transparent hybrid scorer. The score combines TF-IDF/cosine similarity for overall language alignment with exact skill coverage so the output remains understandable. Resume text is never stored.
+**Key design decisions:** I used Flask with server-rendered templates to keep the architecture simple and demo-friendly, SQLite for real persistence with zero infrastructure, and a transparent hybrid scorer. The review combines TF-IDF/cosine similarity, exact skill coverage, impact evidence, and document readability so every score component remains understandable. Uploaded documents are parsed in memory and never stored.
 
 **What I would improve with more time:** I would add user accounts and CSRF protection for a hosted multi-user version, database migrations, richer skill extraction for multi-word domain terms, PDF/DOCX resume parsing, saved match history, accessible chart labels, pagination and search, and end-to-end browser tests. I would also calibrate the scoring weights against human-reviewed resume/job pairs rather than presenting them as universal.
 
