@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}JobMatch{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head><body>
+<header class="site-header"><a class="brand" href="{{ url_for('main.dashboard') }}"><span>JM</span> JobMatch</a>
+<nav><a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint=='main.dashboard' }}">Dashboard</a><a href="{{ url_for('main.applications') }}" class="{{ 'active' if request.endpoint in ('main.applications','main.application_new','main.application_edit') }}">Applications</a><a href="{{ url_for('main.matcher') }}" class="{{ 'active' if request.endpoint=='main.matcher' }}">Match score</a></nav>
+<a class="button button-small" href="{{ url_for('main.application_new') }}">+ Add application</a></header>
+<main class="container">{% for category,message in get_flashed_messages(with_categories=true) %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+{% block scripts %}{% endblock %}</body></html>
